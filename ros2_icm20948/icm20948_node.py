@@ -33,8 +33,11 @@ class ICM20948Node(Node):
                 "The Qwiic ICM20948 device isn't connected to the system. Please check your connection."
             )
         self.imu.begin()
-        self.imu.setFullScaleRangeGyro(qwiic_icm20948.dps2000)
-        self.imu.setFullScaleRangeAccel(qwiic_icm20948.gpm16)
+        #definition de la plage de mesure pour gyro et accel
+        #pour le gyroscope une plage de +/-250 dps fait appliquer un facteur 131
+        # pour l'accel une plage de +/-2 fait appliquer un facteur 16384
+        self.imu.setFullScaleRangeGyro(qwiic_icm20948.dps250)
+        self.imu.setFullScaleRangeAccel(qwiic_icm20948.gpm2)
 
         # Publishers
         self.imu_pub_ = self.create_publisher(sensor_msgs.msg.Imu, "/imu/data_raw", 10)
@@ -54,19 +57,21 @@ class ICM20948Node(Node):
 
             imu_msg.header.stamp = self.get_clock().now().to_msg()
             imu_msg.header.frame_id = self.frame_id
-            imu_msg.linear_acceleration.x = self.imu.axRaw * 9.81 / 2048.0
-            imu_msg.linear_acceleration.y = self.imu.ayRaw * 9.81 / 2048.0
-            imu_msg.linear_acceleration.z = self.imu.azRaw * 9.81 / 2048.0
-            imu_msg.angular_velocity.x = self.imu.gxRaw * math.pi / (16.4 * 180)
-            imu_msg.angular_velocity.y = self.imu.gyRaw * math.pi / (16.4 * 180)
-            imu_msg.angular_velocity.z = self.imu.gzRaw * math.pi / (16.4 * 180)
+            # conversion en accélération m/s et passage des valeurs brut 16 bit en float
+            imu_msg.linear_acceleration.x = self.imu.axRaw * 9.81 / 16384.0 
+            imu_msg.linear_acceleration.y = self.imu.ayRaw * 9.81 / 16384.0
+            imu_msg.linear_acceleration.z = self.imu.azRaw * 9.81 / 16384.0
+            #conversion en radian/s et passage des valeurs brut 16 bit en float
+            imu_msg.angular_velocity.x = self.imu.gxRaw * math.pi / (131 * 180)
+            imu_msg.angular_velocity.y = self.imu.gyRaw * math.pi / (131 * 180)
+            imu_msg.angular_velocity.z = self.imu.gzRaw * math.pi / (131 * 180)
             imu_msg.orientation_covariance[0] = -1
 
             mag_msg.header.stamp = imu_msg.header.stamp
             mag_msg.header.frame_id = self.frame_id
-            mag_msg.magnetic_field.x = self.imu.mxRaw * 1e-6 / 0.15
-            mag_msg.magnetic_field.y = self.imu.myRaw * 1e-6 / 0.15
-            mag_msg.magnetic_field.z = self.imu.mzRaw * 1e-6 / 0.15
+            mag_msg.magnetic_field.x = self.imu.mxRaw * 0.15e-6
+            mag_msg.magnetic_field.y = self.imu.myRaw * 0.15e-6
+            mag_msg.magnetic_field.z = self.imu.mzRaw * 0.15e-6
 
         self.imu_pub_.publish(imu_msg)
         self.mag_pub_.publish(mag_msg)

@@ -1,0 +1,39 @@
+ekf_filter_node:
+  ros__parameters:
+    # Fréquence de sortie et timeout capteurs
+    frequency: 30.0
+    sensor_timeout: 0.2
+
+    # Mode 2D: on ignore z et les composantes verticales
+    two_d_mode: true
+
+    # Frames TF (adapte-les à ton système)
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom                 # sortie de l’EKF dans odom
+
+    # Publication TF depuis l’EKF (utile si tu n’as pas d’autre source)
+    publish_tf: true
+
+    # Entrée IMU
+    imu0: /imu/data
+    imu0_config: [false, false, false,   # position x,y,z (non utilisée)
+                  true,  true,  true,    # orientation roll,pitch,yaw (utilisée)
+                  false, false, false]   # vitesses linéaires (non)
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 5
+    imu0_remove_gravitational_acceleration: true
+
+    # Covariances (facultatif: laisse l’IMU fournir ses covariances)
+    process_noise_covariance:
+      xx: 1.0e-3
+      yy: 1.0e-3
+      tt: 1.0e-3
+      aa: 1.0e-3
+      bb: 1.0e-3
+      cc: 1.0e-3
+
+
+
