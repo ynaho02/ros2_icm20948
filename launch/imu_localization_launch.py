@@ -15,6 +15,17 @@ def generate_launch_description():
             ],
             output='screen'
         ),
+        Node(
+            package='ros2_icm20948',
+            executable='imu_to_odom',
+            name='imu_to_odom',
+            output='screen',
+            remappings=[
+                ('/odom','/odom_from_imu'),
+            ],
+
+        ),
+
 
         # Filtre Madgwick
         Node(
@@ -36,24 +47,44 @@ def generate_launch_description():
             executable='ekf_node',
             name='ekf_filter_node',
             parameters=[
-                {"frequency": 30.0},
-                {"sensor_timeout": 0.2},
+                {"frequency": 15.0},
+                {"sensor_timeout": 1.0},
                 {"two_d_mode": True},
                 {"map_frame": "map"},
                 {"odom_frame": "odom"},
-                {"base_link_frame": "imu_icm20948"},
+                {"base_link_frame": "base_link"},
                 {"world_frame": "odom"},
                 {"publish_tf": True},
                 {"imu0": "/imu/data"},
                 {"imu0_config": [False, False, False,
-                                 True, True, True,
-                                 False, False, False]},
+                                 False, False, False,
+                                 False, False, False,
+                                 False, False, True,
+                                 True, True, False,]},
                 {"imu0_differential": False},
                 {"imu0_relative": False},
                 {"imu0_queue_size": 5},
-                {"imu0_remove_gravitational_acceleration": True}
+                {"imu0_frame_id": "imu_icm20948"},
+                {"imu0_remove_gravitational_acceleration": True},
+                {"odom0":"/odom_from_imu"},
+                {"odom0_config": [False,False,False,
+                                  False,False,False,
+                                  True,True,False,
+                                  False,False,True,
+                                  False,False,False]},
+            ],
+            remappings=[
+                ('/odometry/filtered','/odom'),
             ],
             output='screen'
         ),
+
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='imu_to_base_tf',
+            arguments=["0","0","0","0","0","0","base_link","imu_icm20948"],
+            output="screen"
+        )
 
     ])

@@ -26,6 +26,7 @@ setup(
     entry_points={
         "console_scripts": [
             "icm20948_node = ros2_icm20948.icm20948_node:main",
+            "imu_to_odom = ros2_icm20948.imu_to_odom:main",
         ],
     },
 )
